@@ -69,9 +69,12 @@ public class Percolation {
      *
      * @param row the row
      * @param col the col
+     *
      * @return the boolean
+     * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public boolean isOpen(int row, int col) {
+        validate(row, col);
         return openSites[getSite(row, col)];
     }
 
@@ -118,8 +121,15 @@ public class Percolation {
     }
 
     private void connectWithLeft(int row, int col) {
-        int site = getSite(row, col);
-        connect(site, site - 1);
+        try {
+            if (isOpen(row, col - 1)) {
+                int site = getSite(row, col);
+                int previousSite = getSite(row, col -1);
+                connect(site, previousSite);
+            }
+        } catch (IllegalArgumentException $e) {
+            // Skip if left side is out of range
+        }
     }
 
     private int getRowOffset(int row) {
