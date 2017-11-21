@@ -10,11 +10,14 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
  */
 public class Percolation {
 
-    private static final int OPEN_SITE = 0;
-    private static final int FIRST_ROW = 1;
+    private int topSite = 0;
+    private int bottomSite;
+    private int firstRow = 1;
     private WeightedQuickUnionUF grid;
     private int gridSize;
+    private int lastRow;
     private boolean openSites[];
+    private int numberOfOpenSites;
 
     /**
      * Instantiates a new Percolation.
@@ -27,8 +30,11 @@ public class Percolation {
             throw new IllegalArgumentException("The examined array should contain at least one element");
         }
 
-        gridSize = n;
-        grid     = new WeightedQuickUnionUF(n * n);
+        int elementsCount = n * n;
+        numberOfOpenSites = 0;
+        gridSize = lastRow = n;
+        bottomSite = elementsCount - 1;
+        grid = new WeightedQuickUnionUF(elementsCount);
         openSites = new boolean[n];
     }
 
@@ -46,22 +52,34 @@ public class Percolation {
      *
      * @param row the row of the grid
      * @param col the col of the grid
+     * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public void open(int row, int col) {
         validate(row, col);
 
-        openSites[getSite(row, col)] = true;
+        if (isOpen(row, col)) {
+            return;
+        }
 
-        if (row == FIRST_ROW) {
-            connect(col, OPEN_SITE);
+        openSites[getSite(row, col)] = true;
+        numberOfOpenSites++;
+
+        if (row == firstRow) {
+            grid.union(col, topSite);
 
             return;
         }
 
-        connectWithUpper(row, col);
-        connectWithBottom(row, col);
-        connectWithRight(row, col);
-        connectWithLeft(row, col);
+        if (row == lastRow) {
+            grid.union(col, bottomSite);
+
+            return;
+        }
+
+        connectWithOpen(row, col, row - 1, col);
+        connectWithOpen(row, col, row + 1, col);
+        connectWithOpen(row, col, row, col + 1);
+        connectWithOpen(row, col, row, col - 1);
     }
 
     /**
@@ -69,12 +87,12 @@ public class Percolation {
      *
      * @param row the row
      * @param col the col
-     *
      * @return the boolean
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public boolean isOpen(int row, int col) {
         validate(row, col);
+
         return openSites[getSite(row, col)];
     }
 
@@ -84,9 +102,10 @@ public class Percolation {
      * @param row the row
      * @param col the col
      * @return the boolean
+     * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public boolean isFull(int row, int col) {
-
+        return isOpen(row, col) && grid.connected(getSite(row, col), topSite);
     }
 
     /**
@@ -95,7 +114,7 @@ public class Percolation {
      * @return the int
      */
     public int NumberOfOpenSites() {
-
+        return numberOfOpenSites;
     }
 
     /**
@@ -104,7 +123,7 @@ public class Percolation {
      * @return the boolean
      */
     public boolean percolates() {
-
+        return grid.connected(firstRow, lastRow);
     }
 
     /**
@@ -112,60 +131,28 @@ public class Percolation {
      *
      * @param row the row
      * @param col the col
-     *
      * @return the boolean
      */
-    private int getSite(int row, int col)
-    {
+    private int getSite(int row, int col) {
         return getRowOffset(row) + col - 1;
-    }
-
-    private void connectWithLeft(int row, int col) {
-        try {
-            if (isOpen(row, col - 1)) {
-                int site = getSite(row, col);
-                int previousSite = getSite(row, col -1);
-                connect(site, previousSite);
-            }
-        } catch (IllegalArgumentException $e) {
-            // Skip if left side is out of range
-        }
     }
 
     private int getRowOffset(int row) {
         return (row - 1) * gridSize - 1;
     }
 
-    private void connectWithRight(int row, int col) {
-        int rowOffset = getRowOffset(row);
-        int site      = rowOffset + col;
-        if (site != rowOffset + gridSize) {
+    private void connectWithOpen(int currentRow, int currentCol, int targetRow, int targetCol) {
+        try {
+            if (isOpen(targetRow, targetCol)) {
+                int currentSite = getSite(currentRow, currentCol);
+                int targetSite = getSite(targetRow, targetCol);
 
-            connect(site, site + 1);
-        }
-    }
-
-    private void connectWithBottom(int row, int col) {
-        int rowOffset = getRowOffset(row);
-        int site = rowOffset + col;
-
-        if (row != gridSize) {
-            connect(site, site + gridSize);
-        }
-    }
-
-    private void connectWithUpper(int row, int col) {
-        int rowOffset = getRowOffset(row);
-        int site = rowOffset + col;
-
-        if (row != gridSize) {
-            connect(site, site - gridSize);
-        }
-    }
-
-    private void connect(int site, int anotherSite) {
-        if (!grid.connected(site, anotherSite)) {
-            grid.union(site, anotherSite);
+                if (!grid.connected(currentSite, targetSite)) {
+                    grid.union(currentSite, targetSite);
+                }
+            }
+        } catch (IllegalArgumentException $e) {
+            // Skip if target site is out of range
         }
     }
 
