@@ -18,6 +18,7 @@ public class Percolation {
     private int lastRow;
     private boolean openSites[];
     private int numberOfOpenSites;
+    private boolean percolates = false;
 
     /**
      * Instantiates a new Percolation.
@@ -35,7 +36,7 @@ public class Percolation {
         gridSize = lastRow = n;
         bottomSite = elementsCount - 1;
         grid = new WeightedQuickUnionUF(elementsCount);
-        openSites = new boolean[n];
+        openSites = new boolean[elementsCount];
     }
 
     /**
@@ -55,31 +56,20 @@ public class Percolation {
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public void open(int row, int col) {
-        validate(row, col);
-
         if (isOpen(row, col)) {
             return;
         }
 
         openSites[getSite(row, col)] = true;
         numberOfOpenSites++;
-
         if (row == firstRow) {
-            grid.union(col, topSite);
+            grid.union(getSite(row, col), topSite);
+            connectWithNeighbours(row, col);
 
             return;
         }
 
-        if (row == lastRow) {
-            grid.union(col, bottomSite);
-
-            return;
-        }
-
-        connectWithOpen(row, col, row - 1, col);
-        connectWithOpen(row, col, row + 1, col);
-        connectWithOpen(row, col, row, col + 1);
-        connectWithOpen(row, col, row, col - 1);
+        connectWithNeighbours(row, col);
     }
 
     /**
@@ -105,7 +95,7 @@ public class Percolation {
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public boolean isFull(int row, int col) {
-        return isOpen(row, col) && grid.connected(getSite(row, col), topSite);
+        return isOpen(row, col) && (row == firstRow || grid.connected(getSite(row, col), topSite));
     }
 
     /**
@@ -123,7 +113,7 @@ public class Percolation {
      * @return the boolean
      */
     public boolean percolates() {
-        return grid.connected(firstRow, lastRow);
+        return percolates;
     }
 
     /**
@@ -134,11 +124,16 @@ public class Percolation {
      * @return the boolean
      */
     private int getSite(int row, int col) {
-        return getRowOffset(row) + col - 1;
+        return ((row - 1) * (gridSize)) + (col - 1);
     }
 
-    private int getRowOffset(int row) {
-        return (row - 1) * gridSize - 1;
+    private void connectWithNeighbours(int row, int col) {
+        connectWithOpen(row, col, row - 1, col);
+        connectWithOpen(row, col, row + 1, col);
+        connectWithOpen(row, col, row, col + 1);
+        connectWithOpen(row, col, row, col - 1);
+
+        percolates = percolates || grid.connected(getSite(row, col), topSite);
     }
 
     private void connectWithOpen(int currentRow, int currentCol, int targetRow, int targetCol) {
