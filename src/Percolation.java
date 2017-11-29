@@ -72,7 +72,7 @@ public class Percolation {
             connectedWithBottom[site] = true;
         }
 
-        connectWithNeighbours(site);
+        connectWithNeighbours(row, col);
     }
 
     /**
@@ -84,10 +84,9 @@ public class Percolation {
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public boolean isOpen(int row, int col) {
-        int site = getSite(row, col);
-        validate(site);
+        validate(row, col);
 
-        return openSites[site];
+        return openSites[getSite(row, col)];
     }
 
     /**
@@ -131,18 +130,20 @@ public class Percolation {
         return ((row - 1) * (gridSize)) + (col - 1);
     }
 
-    private void connectWithNeighbours(int site) {
-        connectWithOpen(site, site - gridSize);
-        connectWithOpen(site, site + gridSize);
-
-        if (site)
-        connectWithOpen(site, site + 1);
-        connectWithOpen(site, site - 1);
+    private void connectWithNeighbours(int row, int col) {
+        connectWithOpen(row, col, row - 1, col);
+        connectWithOpen(row, col, row + 1, col);
+        connectWithOpen(row, col, row, col - 1);
+        connectWithOpen(row, col, row, col + 1);
     }
 
-    private void connectWithOpen(int currentSite, int targetSite) {
+    private void connectWithOpen(int currentRow, int currentCol, int targetRow, int targetCol) {
         try {
-            validate(targetSite);
+            validate(currentRow, currentCol);
+            validate(targetRow, targetCol);
+
+            int targetSite = getSite(targetRow, targetCol);
+            int currentSite = getSite(currentRow, currentCol);
             if (openSites[targetSite]) {
                 if (!grid.connected(currentSite, targetSite)) {
                     int currentRoot = grid.find(currentSite);
@@ -164,13 +165,14 @@ public class Percolation {
     /**
      * Validate the site
      *
-     * @param site the site number
+     * @param row the row
+     * @param col the col
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
-    private void validate(int site) {
-        int totalElementsCount = (gridSize * gridSize) - 1;
-        if (site < 0 || site > totalElementsCount) {
-            throw new IllegalArgumentException("Site " + site + "is out of range {0;" + totalElementsCount + "}");
+    private void validate(int row, int col) {
+        if (row < 1 || row > gridSize || col < 1 || col > gridSize) {
+            throw new IllegalArgumentException("Row and col values {" + row +
+                    "; " + col + "} is out of range {" + gridSize + "; " + gridSize + "}");
         }
     }
 
