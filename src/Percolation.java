@@ -11,7 +11,6 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 public class Percolation {
 
     private int topSite = 0;
-    private int bottomSite;
     private int firstRow = 1;
     private WeightedQuickUnionUF grid;
     private int gridSize;
@@ -19,6 +18,7 @@ public class Percolation {
     private boolean openSites[];
     private int numberOfOpenSites;
     private boolean percolates = false;
+    private boolean connectedWithBottom[];
 
     /**
      * Instantiates a new Percolation.
@@ -34,9 +34,9 @@ public class Percolation {
         int elementsCount = n * n;
         numberOfOpenSites = 0;
         gridSize = lastRow = n;
-        bottomSite = elementsCount - 1;
         grid = new WeightedQuickUnionUF(elementsCount);
         openSites = new boolean[elementsCount];
+        connectedWithBottom = new boolean[elementsCount];
     }
 
     /**
@@ -60,16 +60,19 @@ public class Percolation {
             return;
         }
 
-        openSites[getSite(row, col)] = true;
+        int site = getSite(row, col);
+
+        openSites[site] = true;
         numberOfOpenSites++;
         if (row == firstRow) {
-            grid.union(getSite(row, col), topSite);
-            connectWithNeighbours(row, col);
-
-            return;
+            grid.union(site, topSite);
         }
 
-        connectWithNeighbours(row, col);
+        if (row == lastRow) {
+            connectedWithBottom[site] = true;
+        }
+
+        connectWithNeighbours(site);
     }
 
     /**
@@ -81,9 +84,10 @@ public class Percolation {
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
     public boolean isOpen(int row, int col) {
-        validate(row, col);
+        int site = getSite(row, col);
+        validate(site);
 
-        return openSites[getSite(row, col)];
+        return openSites[site];
     }
 
     /**
@@ -127,23 +131,29 @@ public class Percolation {
         return ((row - 1) * (gridSize)) + (col - 1);
     }
 
-    private void connectWithNeighbours(int row, int col) {
-        connectWithOpen(row, col, row - 1, col);
-        connectWithOpen(row, col, row + 1, col);
-        connectWithOpen(row, col, row, col + 1);
-        connectWithOpen(row, col, row, col - 1);
+    private void connectWithNeighbours(int site) {
+        connectWithOpen(site, site - gridSize);
+        connectWithOpen(site, site + gridSize);
 
-        percolates = percolates || grid.connected(getSite(row, col), topSite);
+        if (site)
+        connectWithOpen(site, site + 1);
+        connectWithOpen(site, site - 1);
     }
 
-    private void connectWithOpen(int currentRow, int currentCol, int targetRow, int targetCol) {
+    private void connectWithOpen(int currentSite, int targetSite) {
         try {
-            if (isOpen(targetRow, targetCol)) {
-                int currentSite = getSite(currentRow, currentCol);
-                int targetSite = getSite(targetRow, targetCol);
-
+            validate(targetSite);
+            if (openSites[targetSite]) {
                 if (!grid.connected(currentSite, targetSite)) {
-                    grid.union(currentSite, targetSite);
+                    int currentRoot = grid.find(currentSite);
+                    int targetRoot  = grid.find(targetSite);
+                    if (!percolates) {
+                        boolean areHitBottom = connectedWithBottom[currentRoot] || connectedWithBottom[targetRoot];
+                        connectedWithBottom[currentRoot] = connectedWithBottom[targetRoot] = areHitBottom;
+                    }
+
+                    grid.union(currentRoot, targetRoot);
+                    percolates = grid.connected(currentRoot, topSite) && connectedWithBottom[currentRoot];
                 }
             }
         } catch (IllegalArgumentException $e) {
@@ -152,16 +162,15 @@ public class Percolation {
     }
 
     /**
-     * Validate the input row and col values
+     * Validate the site
      *
-     * @param row the row
-     * @param col the col
+     * @param site the site number
      * @throws IllegalArgumentException If {@code row} or {@code col} is out of range
      */
-    private void validate(int row, int col) {
-        if (row < 1 || row > gridSize || col < 1 || col > gridSize) {
-            throw new IllegalArgumentException("Row and col values {" + row +
-                    "; " + col + "} is out of range {" + gridSize + "; " + gridSize + "}");
+    private void validate(int site) {
+        int totalElementsCount = (gridSize * gridSize) - 1;
+        if (site < 0 || site > totalElementsCount) {
+            throw new IllegalArgumentException("Site " + site + "is out of range {0;" + totalElementsCount + "}");
         }
     }
 
