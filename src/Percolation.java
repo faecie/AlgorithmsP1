@@ -154,7 +154,7 @@ public class Percolation {
                     }
 
                     grid.union(currentRoot, targetRoot);
-                    percolates = grid.connected(currentRoot, topSite) && connectedWithBottom[currentRoot];
+                    percolates = percolates || grid.connected(currentRoot, topSite) && connectedWithBottom[currentRoot];
                 }
             }
         } catch (IllegalArgumentException $e) {
