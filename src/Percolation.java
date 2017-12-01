@@ -1,6 +1,6 @@
 /******************************************************************************
- *  Compilation:  javac 
- *  Execution:    java
+ *  Compilation:  javac-algs4 Percolation.java
+ *  Execution:    java-algs4 Percolation
  ******************************************************************************/
 
 import edu.princeton.cs.algs4.WeightedQuickUnionUF;
@@ -66,6 +66,7 @@ public class Percolation {
         numberOfOpenSites++;
         if (row == firstRow) {
             grid.union(site, topSite);
+            percolates = percolates || gridSize == 1;
         }
 
         if (row == lastRow) {
