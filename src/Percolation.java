@@ -15,10 +15,10 @@ public class Percolation {
     private WeightedQuickUnionUF grid;
     private int gridSize;
     private int lastRow;
-    private boolean openSites[];
+    private boolean[] openSites;
     private int numberOfOpenSites;
     private boolean percolates = false;
-    private boolean connectedWithBottom[];
+    private boolean[] connectedWithBottom;
 
     /**
      * Instantiates a new Percolation.
@@ -33,7 +33,8 @@ public class Percolation {
 
         int elementsCount = n * n;
         numberOfOpenSites = 0;
-        gridSize = lastRow = n;
+        gridSize = n;
+        lastRow = n;
         grid = new WeightedQuickUnionUF(elementsCount);
         openSites = new boolean[elementsCount];
         connectedWithBottom = new boolean[elementsCount];
@@ -107,7 +108,7 @@ public class Percolation {
      *
      * @return the int
      */
-    public int NumberOfOpenSites() {
+    public int numberOfOpenSites() {
         return numberOfOpenSites;
     }
 
@@ -151,14 +152,16 @@ public class Percolation {
                     int targetRoot  = grid.find(targetSite);
                     if (!percolates) {
                         boolean areHitBottom = connectedWithBottom[currentRoot] || connectedWithBottom[targetRoot];
-                        connectedWithBottom[currentRoot] = connectedWithBottom[targetRoot] = areHitBottom;
+                        connectedWithBottom[currentRoot] = areHitBottom;
+                        connectedWithBottom[targetRoot] = areHitBottom;
                     }
 
                     grid.union(currentRoot, targetRoot);
                     percolates = percolates || grid.connected(currentRoot, topSite) && connectedWithBottom[currentRoot];
                 }
             }
-        } catch (IllegalArgumentException $e) {
+        }
+        catch (IllegalArgumentException e) {
             // Skip if target site is out of range
         }
     }
