@@ -1,23 +1,22 @@
 /******************************************************************************
- *  Compilation:  javac-algs4 Deque.java
- *  Execution:    java-algs4 Deque
+ *  Compilation:  javac-algs4 DequeR.java
+ *  Execution:    java-algs4 DequeR
  ******************************************************************************/
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 
 /**
- * The type Deque.
+ * The type DequeR.
  *
  * @param <Item> the type parameter
  */
 public class Deque<Item> implements Iterable<Item> {
 
-    private static final int SIZE_QUANTIFIER = 2;
-    private Item[] items;
-    private int hi = 0;
-    private int lo = 0;
-    private int pivot = 0;
+    private Element first = null;
+    private Element last = null;
+    private int size = 0;
 
     /**
      * The entry point of application.
@@ -33,7 +32,7 @@ public class Deque<Item> implements Iterable<Item> {
      * @return the boolean
      */
     public boolean isEmpty() {
-        return items == null;
+        return size() == 0;
     }
 
     /**
@@ -42,7 +41,7 @@ public class Deque<Item> implements Iterable<Item> {
      * @return the int
      */
     public int size() {
-        return (hi - lo) + 1;
+        return size;
     }
 
     /**
@@ -52,16 +51,15 @@ public class Deque<Item> implements Iterable<Item> {
      */
     public void addFirst(Item item) {
         if (item == null) {
-            throw new java.lang.IllegalArgumentException("Invalid argument item provided for add first");
+            throw new IllegalArgumentException("Adding null value is meaningless");
         }
 
-        if (items == null) {
-            initializeItems(item);
-        } else {
-            maintainRightSize();
-            hi += 1;
-            items[hi] = item;
-        }
+        Element newElement = new Element(first, item);
+        first.next = newElement;
+        first = newElement;
+        last = last == null ? first : last;
+
+        size += 1;
     }
 
     /**
@@ -71,16 +69,15 @@ public class Deque<Item> implements Iterable<Item> {
      */
     public void addLast(Item item) {
         if (item == null) {
-            throw new java.lang.IllegalArgumentException("Invalid argument item provided for add last");
+            throw new IllegalArgumentException("Adding null value is meaningless");
         }
 
-        if (items == null) {
-            initializeItems(item);
-        } else {
-            lo -= 1;
-            maintainLeftSize();
-            items[lo] = item;
-        }
+        Element newElement = new Element(item, last);
+        last.prev = newElement;
+        last = newElement;
+        first = first == null ? last : first;
+
+        size += 1;
     }
 
     /**
@@ -89,24 +86,7 @@ public class Deque<Item> implements Iterable<Item> {
      * @return the item
      */
     public Item removeFirst() {
-        if (isEmpty()) {
-            throw new java.util.NoSuchElementException("The Deque is empty!");
-        }
-
-        Item item = items[hi];
-        if (size() == 1) {
-            items = null;
-        } else {
-            items[hi] = null;
-            hi -= 1;
-            maintainRightSize();
-
-            pivot = hi < pivot ? pivot - 1 : pivot;
-
-            maintainLeftSize();
-        }
-
-        return item;
+        return remove(false);
     }
 
     /**
@@ -115,24 +95,55 @@ public class Deque<Item> implements Iterable<Item> {
      * @return the item
      */
     public Item removeLast() {
+        return remove(true);
+    }
+
+    private Item remove(boolean toRemoveLast) {
         if (isEmpty()) {
-            throw new java.util.NoSuchElementException("The Deque is empty!");
+            throw new NoSuchElementException("The deque is empty");
         }
 
-        Item item = items[lo];
+        Item result;
 
-        if (size() == 1) {
-            items = null;
+        if (toRemoveLast) {
+            result = last.item;
+            last = last.next;
+
+            if (last != null) {
+                last.prev = null;
+            }
         } else {
-            items[lo] = null;
-            lo += 1;
-            maintainLeftSize();
+            result = first.item;
+            first = first.prev;
 
-            pivot = lo > pivot ? pivot + 1 : pivot;
-            maintainRightSize();
+            if (first != null) {
+                first.next = null;
+            }
         }
 
-        return item;
+        size -= 1;
+
+        if (size() <= 1) {
+            last = first;
+        }
+
+        return result;
+    }
+
+    private class Element {
+        private Element next = null;
+        private Element prev = null;
+        private Item item;
+
+        private Element(Element prevElement, Item item) {
+            this.item = item;
+            prev = prevElement;
+        }
+
+        private Element(Item item, Element nextElement) {
+            this.item = item;
+            next = nextElement;
+        }
     }
 
     /**
@@ -144,110 +155,19 @@ public class Deque<Item> implements Iterable<Item> {
         return new FrontToEndIterator();
     }
 
-    /**
-     * Initialize items array
-     *
-     * @param item the item
-     */
-    private void initializeItems(Item item) {
-        items = (Item[]) new Object[1];
-        pivot = 0;
-        hi = 0;
-        lo = 0;
-
-        items[pivot] = item;
-    }
-
     private class FrontToEndIterator implements Iterator<Item> {
-        private int cursor;
-
-        /**
-         * Instantiates a new Front to end iterator.
-         */
-        private FrontToEndIterator() {
-            cursor = lo;
-        }
-
 
         public boolean hasNext() {
-            return items != null && cursor <= hi;
+            return size() != 0;
         }
 
 
         public Item next() {
             if (!hasNext()) {
-                throw new java.util.NoSuchElementException("The Deque is empty!");
+                throw new java.util.NoSuchElementException("The DequeR is empty!");
             }
 
-            cursor += 1;
-            return items[cursor - 1];
-        }
-    }
-
-    private void extendFromRight() {
-        int size = (SIZE_QUANTIFIER * hi - pivot) + SIZE_QUANTIFIER;
-        Item[] newItems = (Item[]) new Object[size];
-
-        System.arraycopy(items, lo, newItems, lo, hi + 1 - lo);
-        items = newItems;
-    }
-
-    private void extendFromLeft() {
-        int newPivot = (2 * pivot) + 1;
-        lo = newPivot - pivot - 1;
-        int newHi = (hi - pivot) + newPivot;
-        int newSize = (newPivot - pivot) + items.length;
-        Item[] newItems = (Item[]) new Object[newSize];
-        System.arraycopy(items, 0, newItems, lo + 1, hi + 1);
-        items = newItems;
-
-        hi = newHi;
-        pivot = newPivot;
-    }
-
-    private void reduceFromRight() {
-        int newSize = (items.length + pivot) / 2;
-
-        Item[] newItems = (Item[]) new Object[newSize];
-        System.arraycopy(items, lo, newItems, lo, (hi - lo) + 1);
-        items = newItems;
-    }
-
-    private void reduceFromLeft() {
-        int newPivot = (pivot - 1) / 2;
-        int newLo = newPivot - pivot + lo;
-        int newHi = (hi - pivot) + newPivot;
-        int newSize = items.length - (pivot - newPivot);
-        Item[] newItems = (Item[]) new Object[newSize];
-        System.arraycopy(items, lo, newItems, 0, (hi - lo) + 1);
-        items = newItems;
-
-        hi = newHi;
-        lo = newLo;
-        pivot = newPivot;
-    }
-
-    private void maintainLeftSize() {
-        if (pivot != lo && (pivot - lo) + 1 == (pivot + 1)/2) {
-            reduceFromLeft();
-
-            return;
-        }
-
-        if (lo < 0) {
-            extendFromLeft();
-        }
-    }
-
-    private void maintainRightSize() {
-        if ((hi - pivot) + 1 <= (items.length - pivot)/2) {
-            reduceFromRight();
-
-            return;
-        }
-
-        if (items.length - 1 < hi + 1) {
-            extendFromRight();
+            return removeLast();
         }
     }
 }
