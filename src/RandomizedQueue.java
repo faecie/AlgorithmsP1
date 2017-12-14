@@ -3,21 +3,56 @@
  *  Execution:    java-algs4 ArrayDeque
  ******************************************************************************/
 
+import edu.princeton.cs.algs4.StdOut;
+import edu.princeton.cs.algs4.StdRandom;
+
 import java.util.Iterator;
 
 /**
  * The type Randomized queue.
+ *
+ * @param <Item> the type parameter
  */
 public class RandomizedQueue<Item> implements Iterable<Item> {
 
+    /**
+     * Position of the first element
+     */
+    private static final int FIRST_ITEM_POS = 0;
+
+    /**
+     * Initial size of an array
+     */
+    private static final int INITIAL_SIZE = 1;
+
+    /**
+     * Array resizing factor
+     */
     private static final int QUANTIFIER = 2;
 
+    /**
+     * Array with items
+     */
     private Item[] items;
+
+    /**
+     * Actual size of the queue
+     */
+    private int size;
+
+    /**
+     * Construct an empty randomized queue
+     */
+    private RandomizedQueue(RandomizedQueue<Item> another) {
+        size = another.size();
+        items = another.items.clone();
+    }
 
     /**
      * Construct an empty randomized queue
      */
     public RandomizedQueue() {
+        size = 0;
     }
 
     /**
@@ -35,7 +70,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @return the int
      */
     public int size() {
-        return items == null ? 0 : items.length;
+        return size;
     }
 
     /**
@@ -44,10 +79,25 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @param item the item
      */
     public void enqueue(Item item) {
-        if (isEmpty()) {
-            items = (Item[]) new Object[1];
-            items[0] = item;
+        if (item == null) {
+            throw new java.lang.IllegalArgumentException("Invalid argument item provided for add last");
         }
+
+        if (size() == 0) {
+            items = (Item[]) new Object[INITIAL_SIZE];
+            items[FIRST_ITEM_POS] = item;
+            size += 1;
+
+            return;
+        }
+
+        if (size() == items.length) {
+            resize(items.length * QUANTIFIER);
+        }
+
+        size += 1;
+
+        items[size() - 1] = item;
     }
 
     /**
@@ -56,6 +106,26 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @return the item
      */
     public Item dequeue() {
+        int randIx = getRandIx();
+
+        Item result = items[randIx];
+
+        if (size() == 1) {
+            items = null;
+            size -= 1;
+
+            return result;
+        }
+
+        items[randIx] = items[size() - 1];
+        items[size() - 1] = null;
+        size -= 1;
+
+        if (size() < items.length / QUANTIFIER) {
+            resize(items.length / QUANTIFIER);
+        }
+
+        return result;
     }
 
     /**
@@ -64,6 +134,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @return the item
      */
     public Item sample() {
+        return items[getRandIx()];
     }
 
     /**
@@ -72,32 +143,73 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @return the iterator
      */
     public Iterator<Item> iterator() {
-        return new RandomizedIterator();
+        return new RandomizedIterator(this);
     }
 
+    /**
+     * Resize an array
+     *
+     * @param newSize new size of an array
+     */
+    private void resize(int newSize) {
+        Item[] newItems = (Item[]) new Object[newSize];
+        System.arraycopy(items, FIRST_ITEM_POS, newItems, FIRST_ITEM_POS, size());
+
+        items = newItems;
+    }
+
+    /**
+     * Get random index from the array
+     *
+     *
+     * @return random number
+     */
+    private int getRandIx() {
+        if (isEmpty()) {
+            throw new java.util.NoSuchElementException("The Deque is empty!");
+        }
+
+        int randIx;
+
+        if (size() == 1) {
+            randIx = FIRST_ITEM_POS;
+        }
+        else {
+            randIx = StdRandom.uniform(size());
+        }
+        return randIx;
+    }
+
+    /**
+     * The iterator
+     */
     private class RandomizedIterator implements Iterator<Item> {
-        private int cursor;
+
+        private final RandomizedQueue<Item> queue;
 
         /**
          * Instantiates a new Front to end iterator.
          */
-        private FrontToEndIterator() {
-            cursor = lo;
+        private RandomizedIterator(RandomizedQueue<Item> another) {
+            queue = new RandomizedQueue<>(another);
         }
 
-
+        /**
+         * {@inheritDoc}
+         */
         public boolean hasNext() {
-            return items != null && cursor <= hi;
+            return queue.size() != 0;
         }
 
-
+        /**
+         * {@inheritDoc}
+         */
         public Item next() {
             if (!hasNext()) {
-                throw new java.util.NoSuchElementException("The ArrayDeque is empty!");
+                throw new java.util.NoSuchElementException("The Deque is empty!");
             }
 
-            cursor += 1;
-            return items[cursor - 1];
+            return queue.dequeue();
         }
     }
 
@@ -107,5 +219,25 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
      * @param args the input arguments
      */
     public static void main(String[] args) {
+        RandomizedQueue<String> randQueue = new RandomizedQueue<>();
+
+        for (String item: args) {
+            randQueue.enqueue(item);
+        }
+
+        StdOut.print("First random set");
+        for (String item: randQueue) {
+            StdOut.printf("rand %s\n", item);
+        }
+
+        StdOut.print("Second random set");
+        for (String item: randQueue) {
+            StdOut.printf("rand %s\n", item);
+        }
+
+        StdOut.print("Third random set");
+        for (String item: randQueue) {
+            StdOut.printf("rand %s\n", item);
+        }
     }
 }
