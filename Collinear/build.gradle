@@ -1,0 +1,3 @@
+zip {
+    include "BruteCollinearPoints.java", "FastCollinearPoints.java", 'Point.java'
+}

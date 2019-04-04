@@ -1,0 +1,71 @@
+plugins {
+    id "com.github.spotbugs" version "1.7.1"
+}
+
+allprojects {
+    apply plugin: "idea"
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'checkstyle'
+    apply plugin: 'com.github.spotbugs'
+    apply plugin: 'pmd'
+
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        checkstyle group: 'com.thomasjensen.checkstyle.addons', name: 'checkstyle-addons', version: '5.2.1'
+        compile 'edu.princeton.cs:algs4:1.0.3'
+        testCompile "junit:junit:4.10"
+    }
+
+    sourceSets {
+        main.java.srcDirs = ["src"]
+        test.java.srcDirs = ["test"]
+    }
+
+    def configDir = "$rootProject.projectDir/config"
+
+    checkstyle {
+        toolVersion = "8.17"
+        configFile = file("$configDir/.checkstyle/checkstyle.xml")
+        configProperties = [
+            'suppressions': "$configDir/.checkstyle/suppressions.xml",
+            'baseDir'     : rootDir,
+        ]
+        ignoreFailures = true
+    }
+
+    spotbugs {
+        toolVersion = "3.1.3"
+        includeFilter = file("$configDir/.spotbugs/spotbugs.xml")
+        effort = "max"
+        reportLevel = "high"
+        ignoreFailures = true
+    }
+
+    pmd {
+        toolVersion = '6.12.0'
+        ruleSetFiles = files("$configDir/.pmd/pmd.xml")
+        ignoreFailures = true
+    }
+
+    task zip(type: Zip) {
+        from sourceSets.main.java
+    }
+
+    tasks.addRule("Pattern: run<ClassName>") { taskName ->
+        if (taskName.startsWith("run")) {
+            task(taskName, type: JavaExec) {
+                main = taskName.substring(3)
+                if (System.getProperty("args")) {
+                    args = System.getProperty("args").split(",") as List
+                }
+                classpath = sourceSets.main.runtimeClasspath
+            }
+        }
+    }
+}
