@@ -8,7 +8,7 @@ public class FastCollinearPoints {
     /**
      * Collinear lineSegments
      */
-    public final ArrayList<LineSegment> lineSegments;
+    final ArrayList<LineSegment> lineSegments;
 
     /**
      * Finds all line lineSegments containing 4 points

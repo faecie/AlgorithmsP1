@@ -4,15 +4,17 @@ import java.util.Comparator;
 
 public class Point implements Comparable<Point> {
 
+    private static final double ZERO = 0.0;
+
     /**
-     * X-coordinate of this point
+     * X-coordinate of this point it
      */
-    public final int x;
+    final int x;
 
     /**
      * Y-coordinate of this point
      */
-    public final int y;
+    final int y;
 
     /**
      * Initializes a new point.
@@ -45,7 +47,7 @@ public class Point implements Comparable<Point> {
      *
      * @param that the other point
      */
-    public void drawTo(Point that) {
+    void drawTo(Point that) {
         StdDraw.line(this.x, this.y, that.x, that.y);
     }
 
@@ -60,24 +62,15 @@ public class Point implements Comparable<Point> {
      * @param that the other point
      * @return the slope between this point and the specified point
      */
-    public double slopeTo(Point that) {
-        if ((that.x == this.x) && (that.y == this.y)) {
+    double slopeTo(Point that) {
+        if (that.x == this.x && that.y == this.y) {
             return Double.NEGATIVE_INFINITY;
         }
 
         double vertical = that.y - this.y;
-
-        if (vertical == 0) {
-            return 0;
-        }
-
         double horizon = that.x - this.x;
 
-        if (horizon == 0) {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        return vertical / horizon;
+        return horizon == 0 ? Double.POSITIVE_INFINITY : (vertical / horizon) + ZERO;
     }
 
     /**
@@ -111,7 +104,7 @@ public class Point implements Comparable<Point> {
      *
      * @return the Comparator that defines this ordering on points
      */
-    public Comparator<Point> slopeOrder() {
+    Comparator<Point> slopeOrder() {
         return new BySlope();
     }
 
@@ -130,18 +123,7 @@ public class Point implements Comparable<Point> {
     private class BySlope implements Comparator<Point> {
         @Override
         public int compare(Point p1, Point p2) {
-            double firstSlope = Point.this.slopeTo(p1);
-            double secondSlope = Point.this.slopeTo(p2);
-
-            if (firstSlope < secondSlope) {
-                return -1;
-            }
-
-            if (firstSlope > secondSlope) {
-                return 1;
-            }
-
-            return 0;
+            return Double.compare(Point.this.slopeTo(p1), Point.this.slopeTo(p2));
         }
     }
 }

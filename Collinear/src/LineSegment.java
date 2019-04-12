@@ -1,6 +1,6 @@
 public class LineSegment {
-    private final Point p;   // one endpoint of this line segment
-    private final Point q;   // the other endpoint of this line segment
+    final Point p;   // one endpoint of this line segment
+    final Point q;   // the other endpoint of this line segment
 
     /**
      * Initializes a new line segment.
@@ -10,7 +10,7 @@ public class LineSegment {
      * @throws NullPointerException if either <tt>p</tt> or <tt>q</tt>
      *                              is <tt>null</tt>
      */
-    public LineSegment(Point p, Point q) {
+    public  LineSegment(Point p, Point q) {
         if (p == null || q == null) {
             throw new NullPointerException("argument is null");
         }
@@ -33,6 +33,7 @@ public class LineSegment {
      *
      * @return a string representation of this line segment
      */
+    @Override
     public String toString() {
         return p + " -> " + q;
     }
@@ -45,6 +46,7 @@ public class LineSegment {
      *
      * @throws UnsupportedOperationException if called
      */
+    @Override
     public int hashCode() {
         throw new UnsupportedOperationException();
     }

@@ -19,7 +19,7 @@ subprojects {
     dependencies {
         checkstyle group: 'com.thomasjensen.checkstyle.addons', name: 'checkstyle-addons', version: '5.2.1'
         compile 'edu.princeton.cs:algs4:1.0.3'
-        testCompile "junit:junit:4.10"
+        testImplementation('org.junit.jupiter:junit-jupiter:5.4.2')
     }
 
     sourceSets {
@@ -55,6 +55,10 @@ subprojects {
 
     task zip(type: Zip) {
         from sourceSets.main.java
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     tasks.addRule("Pattern: run<ClassName>") { taskName ->

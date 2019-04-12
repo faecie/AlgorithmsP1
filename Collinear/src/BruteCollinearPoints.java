@@ -7,7 +7,7 @@ public class BruteCollinearPoints {
     /**
      * Collinear lineSegments
      */
-    public LinkedList<LineSegment> lineSegments;
+    LinkedList<LineSegment> lineSegments;
 
     /**
      * Finds all line lineSegments containing 4 points
